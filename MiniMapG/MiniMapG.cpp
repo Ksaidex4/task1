@@ -1,6 +1,7 @@
 ﻿// ConsoleApplication5.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
 //
 
+// для использования стандартных функций ввода/вывода
 #include <iostream>
 // для использования класса stack
 #include  <stack>
@@ -8,6 +9,22 @@
 #include <algorithm>  
 
 using std::cin;  using std::cout; using std::max;
+
+// высота и ширина мини карты
+const int MinimapHeight = 5;
+const int MinimapWidth = 6;
+
+// Статический массив с исходными данными для проверки алгоритма
+// Значение 0 означает, что место занято союзными войсками
+// Значение 1 означает, что место занято врагом
+char MiniMap[MinimapHeight][MinimapWidth] =
+{
+{0,0,1,0,1,0},
+{1,0,1,0,1,0},
+{1,1,1,0,0,0},
+{1,1,1,0,0,0},
+{1,1,1,1,1,1}
+};
 
 struct point // точка на мини карте
 {
@@ -20,27 +37,15 @@ struct miniMapPart // прямоугольный участвок мини ка�
 	point TopLeftCorner, BottomLeftCorner; // левый верхний угол и нижний правый угол участка мини карты
 };
 
-//Статический массив для проверки алгоритма
-char a[5][6] =
+// процедура поиска максимального прямоугольного участка мини карты состоящего из 0
+miniMapPart miniMapPartSearch(int height, int width, char MiniMap[MinimapHeight][MinimapWidth])
 {
-{0,0,1,0,1,0},
-{1,0,1,0,1,0},
-{1,1,1,0,0,0},
-{1,1,1,0,0,0},
-{1,1,1,1,1,1}
-};
+	//дополнительные динамики
+	char  d[6] = { -1,-1,-1,-1,-1,-1 }; // значение -1 указывает, что над текущей строкой нет единиц   
+	char d2[6] = { 0, 0, 0, 0, 0, 0 }; // расстояние от текущего нуля до крайнего левого
+	char d1[6] = { 0, 0, 0, 0, 0, 0 }; // расстояние от текущего нуля до крайнего правого
 
-//дополнительные динамики
-char d[6] = { -1,-1,-1,-1,-1,-1 };
-char d2[6] = { 0, 0, 0, 0, 0, 0 };
-char d1[6] = { 0, 0, 0, 0, 0, 0 };
-
-int main()
-{
-	int n = 5, m = 6; // высота и ширина матрицы
 	miniMapPart answer; //результат, включающий координаты участка мини карты и его площадь
-	int height; // высота участка мини карты
-	int width; // высота участка мини карты
 
 	// обнулим все значения в ответе
 	answer.mapArea = 0;
@@ -52,13 +57,14 @@ int main()
 	std::stack<int> st; //создание стека
 
 	// цикл по строкам исходного массива
-	for (int i = 0; i < n; ++i)
+	for (int i = 0; i < MinimapHeight; ++i)
 	{
-		for (int j = 0; j < m; ++j)
-			if (a[i][j] == 1)
+		// в d помещается номер строки, в которой находится ближайшая единица сверху
+		for (int j = 0; j < MinimapWidth; ++j)
+			if (MiniMap[i][j] == 1)
 				d[j] = i;
 		while (!st.empty()) st.pop();
-		for (int j = 0; j < m; ++j)
+		for (int j = 0; j < MinimapWidth; ++j)
 		{
 			while (!st.empty() && d[st.top()] <= d[j])
 			{
@@ -70,32 +76,54 @@ int main()
 			st.push(j);
 		}
 		while (!st.empty()) st.pop();
-		for (int j = m - 1; j >= 0; --j)
+		for (int j = MinimapWidth - 1; j >= 0; --j)
 		{
 			while (!st.empty() && d[st.top()] <= d[j])  st.pop();
 			if (st.empty())
-				d2[j] = m;
+				d2[j] = MinimapWidth;
 			else d2[j] = st.top();
 			st.push(j);
 		}
-		for (int j = 0; j < m; ++j)
+		for (int j = 0; j < MinimapWidth; ++j)
 		{
-			height = i - d[j];
-			width = (d2[j] - d1[j] - 1);
+			int newMinimapHeight; // высота участка мини карты
+			int newMinimapWidth; // высота участка мини карты
+			newMinimapHeight = i - d[j];
+			newMinimapWidth = (d2[j] - d1[j] - 1);
 
 			// если текущее значение площади меньше нового, то обновить текущее новым значением
-			if (answer.mapArea < (height * width)) 
+			if (answer.mapArea < (newMinimapHeight * newMinimapWidth))
 			{
-				answer.mapArea = (height * width);
-				answer.TopLeftCorner.x = d1[j]+1;
-				answer.TopLeftCorner.y = d[j]+1;	
+				answer.mapArea = (newMinimapHeight * newMinimapWidth);
+				answer.TopLeftCorner.x = d1[j] + 1;
+				answer.TopLeftCorner.y = d[j] + 1;
 				answer.BottomLeftCorner.x = d2[j] - 1;
 				answer.BottomLeftCorner.y = i;
 			}
 		}
-
 	}
+	return answer;
+}
+
+
+
+int main()
+{
+	miniMapPart answer; //результат, включающий координаты участка мини карты и его площадь
+	answer = miniMapPartSearch(MinimapHeight, MinimapHeight, MiniMap); // поиск участка мини карты
 	//вывод ответа на консоль
-	printf("Area=%d, TopLeftCorner(X=%d,Y=%d), BottomLeftCorner(X=%d,Y=%d)", answer.mapArea, answer.TopLeftCorner.x, answer.TopLeftCorner.y, answer.BottomLeftCorner.x, answer.BottomLeftCorner.y);
+	printf("Max our area=%d, TopLeftCorner(X=%d,Y=%d), BottomLeftCorner(X=%d,Y=%d) \n", answer.mapArea, answer.TopLeftCorner.x, answer.TopLeftCorner.y, answer.BottomLeftCorner.x, answer.BottomLeftCorner.y);
+	
+	// инвертируем мини карту, чтобы 0 заменить на 1, а 1 на 0 меняем местами врага и союзников
+	for (int i = 0; i < MinimapHeight; ++i)
+	{
+		for (int j = 0; j < MinimapWidth; ++j)	MiniMap[i][j] = !MiniMap[i][j];
+	}
+
+	answer = miniMapPartSearch(MinimapHeight, MinimapHeight, MiniMap); // поиск участка мини карты
+	//вывод ответа на консоль
+	printf("Max enemy Area=%d, TopLeftCorner(X=%d,Y=%d), BottomLeftCorner(X=%d,Y=%d)", answer.mapArea, answer.TopLeftCorner.x, answer.TopLeftCorner.y, answer.BottomLeftCorner.x, answer.BottomLeftCorner.y);
+
+
 }
 
