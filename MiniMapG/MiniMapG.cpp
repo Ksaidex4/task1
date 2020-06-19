@@ -1,4 +1,4 @@
-﻿// ConsoleApplication5.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
+﻿// MiniMapG.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
 //
 
 // для использования стандартных функций ввода/вывода
@@ -6,7 +6,9 @@
 // для использования класса stack
 #include  <stack>
 // для использования функции max
-#include <algorithm>  
+#include <algorithm>
+// для использования ввода/вывода в файл
+#include <stdio.h>
 
 using std::cin;  using std::cout; using std::max;
 
@@ -105,15 +107,28 @@ miniMapPart miniMapPartSearch(int height, int width, char MiniMap[MinimapHeight]
 	return answer;
 }
 
-
+int ks_WriteOutput(miniMapPart answer)
+{
+	FILE* ks_outputfile;
+	if ((ks_outputfile = fopen("..\\data\\output.txt", "w")) == NULL) {
+		printf("Cannot open file.\n");
+		exit(1);
+	}
+	fprintf(ks_outputfile, "Max our area=%d, TopLeftCorner(X=%d,Y=%d), BottomLeftCorner(X=%d,Y=%d) \n", answer.mapArea, answer.TopLeftCorner.x, answer.TopLeftCorner.y, answer.BottomLeftCorner.x, answer.BottomLeftCorner.y);
+	fclose(ks_outputfile);
+	return(0);
+}
 
 int main()
 {
+	
 	miniMapPart answer; //результат, включающий координаты участка мини карты и его площадь
 	answer = miniMapPartSearch(MinimapHeight, MinimapHeight, MiniMap); // поиск участка мини карты
 	//вывод ответа на консоль
 	printf("Max our area=%d, TopLeftCorner(X=%d,Y=%d), BottomLeftCorner(X=%d,Y=%d) \n", answer.mapArea, answer.TopLeftCorner.x, answer.TopLeftCorner.y, answer.BottomLeftCorner.x, answer.BottomLeftCorner.y);
 	
+	ks_WriteOutput(answer);
+
 	// инвертируем мини карту, чтобы 0 заменить на 1, а 1 на 0 меняем местами врага и союзников
 	for (int i = 0; i < MinimapHeight; ++i)
 	{
